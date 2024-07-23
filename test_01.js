@@ -6,7 +6,7 @@ const config = {
   physics: {
     default: "arcade",
     arcade: {
-      gravity: { y: 300 },
+      gravity: { y: 0 },
       debug: false,
     },
   },
@@ -34,6 +34,10 @@ function preload() {
   });
 }
 
+let player;
+let cursors;
+let lastDirection = "right"; // Хранит последнее горизонтальное направление
+
 function create() {
   this.add
     .image(this.scale.width / 2, this.scale.height / 2, "sky")
@@ -41,12 +45,14 @@ function create() {
     .setScrollFactor(0);
 
   const platforms = this.physics.add.staticGroup();
-  platforms.create(400, 568, "ground").setScale(2).refreshBody();
-  platforms.create(600, 400, "ground");
+
+  platforms.create(100, 968, "ground").setScale(8).refreshBody();
+  platforms.create(1600, 400, "ground");
   platforms.create(50, 250, "ground");
   platforms.create(750, 220, "ground");
 
   player = this.physics.add.sprite(100, 450, "dude");
+  player.setScale(2);
   player.setBounce(0.2);
   player.setCollideWorldBounds(true);
 
@@ -76,18 +82,38 @@ function create() {
 }
 
 function update() {
+  let velocityX = 0;
+  let velocityY = 0;
+
   if (cursors.left.isDown) {
-    player.setVelocityX(-160);
-    player.anims.play("left", true);
-  } else if (cursors.right.isDown) {
-    player.setVelocityX(160);
-    player.anims.play("right", true);
-  } else {
-    player.setVelocityX(0);
-    player.anims.play("turn");
+    velocityX = -160;
+    lastDirection = "left";
+  }
+  if (cursors.right.isDown) {
+    velocityX = 160;
+    lastDirection = "right";
+  }
+  if (cursors.up.isDown) {
+    velocityY = -160;
+  }
+  if (cursors.down.isDown) {
+    velocityY = 160;
   }
 
-  if (cursors.up.isDown && player.body.touching.down) {
-    player.setVelocityY(-330);
+  player.setVelocityX(velocityX);
+  player.setVelocityY(velocityY);
+
+  if (velocityX < 0) {
+    player.anims.play("left", true);
+  } else if (velocityX > 0) {
+    player.anims.play("right", true);
+  } else if (velocityY !== 0) {
+    if (lastDirection === "left") {
+      player.anims.play("left", true);
+    } else {
+      player.anims.play("right", true);
+    }
+  } else {
+    player.anims.play("turn");
   }
 }
